@@ -1,0 +1,367 @@
+<!doctype html>
+<html class="splitview">
+<head>
+	<title>Quick Touch Math Reports</title>
+  <meta content="width=device-width, minimum-scale=1, maximum-scale=1,maximum-scale=1, user-scalable=no" name="viewport">
+  <!-- <link href="http://code.jquery.com/mobile/1.2.0-beta.1/jquery.mobile-1.2.0-beta.1.css" rel="stylesheet" type="text/css"> -->
+  <link rel="stylesheet" href="css/jquery.mobile.css" />
+  <link rel="stylesheet" href="css/jquery.mobile.splitview.css" />
+            <!-- <link rel="stylesheet"  href="css/jquery.mobile.scrollview.css" /> -->
+  <link rel="stylesheet"  href="css/jquery.mobile.grids.collapsible.css" />
+  <script src="js/jquery-1.7.1.js" type="text/javascript"></script>
+  <script type="text/javascript" src="js/jquery.mobile.splitview.js"></script>
+  <script src="js/jquery.mobile.js" type="text/javascript"></script>
+  <script type="text/javascript" src="js/iscroll.js"></script>
+  <script type="text/javascript" src="js/iscroll-wrapper.js"></script>
+  <!-- <link rel="stylesheet" href="css/bootstrap.min.css"> -->
+  <script type="text/javascript" src="js/moment.min.js"></script>
+  <style>
+  	.response-row {
+  		height: 60px;
+  		vertical-align: middle;
+  	}
+  	.question {
+  		font-size: 32px;
+  		margin: 10px;
+  	}
+  	.success{
+  		font-size: 14px;
+  		border-radius: 30px 0px 0px 30px;
+  		width: 30px;
+  		height: 30px;
+  		padding: 10px;
+  		/*box-shadow: 2px 10px 30px 0px;*/
+  		border: 1px solid black;
+  	}
+  	.green{
+  		background-color: green;
+  		color: white;
+  	}
+  	.red{
+  		background-color: red;
+  		color: white;
+  	}
+  	.yellow {
+  		background-color: yellow;
+  		color: black;
+  	}
+  	.orange {
+  		background-color: orange;
+  		color: white;
+  	}
+  	.latency {
+  		font-size: 14px;
+  		border-radius: 0px 30px 30px 0px;
+  		width: 30px;
+  		height: 30px;
+  		padding: 10px;
+  		/*box-shadow: 5px 10px 30px 0px;*/
+  		margin-right: 10px;
+  		border: 1px solid black;
+  	}
+  	#actor-name {
+  		float: right;
+  		font-size: 48px;
+  		padding-right: 20px;
+  	}
+  </style>
+</head>
+<body>
+<div data-role="panel" data-id="menu">
+    <!-- Start of first page -->
+    <div data-role="page" id="menu-page">
+
+        <div data-role="header">
+            <h1>Students</h1>
+        </div><!-- /header -->
+
+        <div data-role="content">   
+            <ul id="statement-list" name="statement-list" data-role="listview" data-inset="true"></ul>
+        </div><!-- /content -->
+
+    </div><!-- /page -->
+    <!-- other side panel pages here -->
+</div>
+<div data-role="panel" data-id="main">
+    <!-- Start of second page -->
+    <div data-role="page" id="main-page">
+
+        <div data-role="header">
+            <h1>Results</h1>
+        </div><!-- /header -->
+
+        <div data-role="content">   
+            <div id="statement-content" name="statement-content">
+              <div id="actor-name"></div>
+              <div id="responses"></div>
+            </div>
+        </div><!-- /content -->
+
+        <div data-role="footer">
+            <h4>&nbsp;</h4>
+        </div><!-- /footer -->
+    </div><!-- /page -->
+    <!-- other main panel pages here -->
+</div>
+<script>
+$(document).ready(function(){
+
+var tc_lrs = {};
+tc_lrs.endpoint = "https://cloud.scorm.com/ScormEngineInterface/TCAPI/VK76L7KZME/";
+tc_lrs.auth = "Basic Vks3Nkw3S1pNRTo3WTFETmM1bWFwYk5wckg5aE1KQmNaNTFUbWFGSXNvY1hnUlFjREtn";
+
+var players = {};
+var responseData = [];
+var responseObjs = {};
+var statements = {};
+
+getStatements(function(data){
+
+  for(var i=0;i<data.statements.length;i++){
+  	statements[data.statements[i].id] = data.statements[i];
+  	if(!players[data.statements[i].actor.name]){
+  		players[data.statements[i].actor.name] = {};
+  		if(!players[data.statements[i].actor.name].responses){
+		  	players[data.statements[i].actor.name].responses = [];
+  		}
+  		players[data.statements[i].actor.name].responses.push(data.statements[i]);
+
+  		var resp = {};
+  		resp.player = data.statements[i].actor.name;
+  		resp.question = data.statements[i].context.extensions.group;
+  		resp.attempts = [];
+  		resp.attempts.push(data.statements[i]);
+    	responseData.push(resp);
+
+  		
+
+		
+		var output = '<li class="ui-btn ui-btn-icon-right ui-li-has-arrow ui-li ui-btn-up-c" data-corners="false" data-shadow="false" data-iconshadow="true" data-wrapperels="div" data-icon="arrow-r" data-iconpos="right" data-theme="c">';
+		output += '<div class="ui-btn-inner ui-li">';
+		output += '<div class="ui-btn-text">';
+		output += '<a href="#'+data.statements[i].actor.name+'" class="statement-row ui-link-inherit">'+data.statements[i].actor.name+'</a>';
+		output += '</div></div></li>';
+
+		$('#statement-list').append(output);
+    }else{
+    	players[data.statements[i].actor.name].responses.push(data.statements[i]);
+
+    	//console.log('found another response for '+data.statements[i].actor.name+' - adding response');
+    	for (var j = 0; j < responseData.length; j++) {
+  			if(responseData[j].question !== data.statements[i].context.extensions.group){
+  				//console.log('this is a new question - '+data.statements[i].context.extensions.group);
+  				var resp = {};
+  				resp.player = data.statements[i].actor.name;
+		  		resp.question = data.statements[i].context.extensions.group;
+		  		resp.attempts = [];
+		  		resp.attempts.push(data.statements[i]);
+		    	responseData.push(resp);
+		    	break;
+  			}else{
+  				//console.log('this is an existing question - '+data.statements[i].context.extensions.group);
+  				responseData[j].attempts.push(data.statements[i]);
+  				break;
+  			}
+  		}
+
+    }
+    
+
+  }
+  console.log(responseObjs);
+  console.log(players);
+  console.log('statements', statements);
+  $('#statement-list').listview('refresh');
+});
+
+
+function getStatements(callback){
+
+    $.ajax({
+    url: tc_lrs.endpoint+'/statements',
+    type: 'GET',
+    dataType: 'json',
+    success: function(data) {
+      //console.log(data); 
+      callback(data);
+    },
+    error: function(err) {
+      console.log(err);
+      alert('error:'+err.status+' - '+err.statusText);
+      
+    },
+    beforeSend: function(xhr) {
+      xhr.setRequestHeader('Authorization', tc_lrs.auth);
+      xhr.setRequestHeader('X-Experience-API-Version','0.95');
+    }
+  });
+}
+
+function getStatement(statementId, callback){
+
+    $.ajax({
+    url: tc_lrs.endpoint+'/statements?statementId='+statementId,
+    type: 'GET',
+    dataType: 'json',
+    success: function(data) {
+      //console.log(data); 
+      callback(data);
+    },
+    error: function(err) {
+      console.log(err);
+      alert('error:'+err.status+' - '+err.statusText);
+      
+    },
+    beforeSend: function(xhr) {
+      xhr.setRequestHeader('Authorization', tc_lrs.auth);
+      xhr.setRequestHeader('X-Experience-API-Version','0.95');
+    }
+  });
+}
+
+
+$('.statement-row').live('click',function(){
+  console.log($(this).attr('href'));
+  //$('#statement-content').append($(this).attr('href'));
+  var player = $(this).attr('href').substr(1);
+  //getStatement(player, function(data){
+  	updateReport(player);
+  //});
+});
+
+function updateReport(player){
+	console.log(player);
+    $('#responses').html('');
+    //sort by question
+    players[player].responses.sort(function(a,b){
+    	var delim = '';
+    	switch(a.context.extensions.game){
+    		case "add":
+    			delim = "+";
+    			break;
+    		case "sub":
+    			delim = "-";
+    			break;
+    		case "mul":
+    			delim = 'x';
+    			break;
+    		case "div":
+    			delim = "/";
+    			break;
+    		default:
+    			break;
+    	}
+    	if (parseInt(a.context.extensions.group.split('x')[0],10) < parseInt(b.context.extensions.group.split('x')[0],10)){return -1;}
+		if (parseInt(a.context.extensions.group.split('x')[0],10) > parseInt(b.context.extensions.group.split('x')[0],10)){return 1;}
+		if (parseInt(a.context.extensions.group.split('x')[1],10) < parseInt(b.context.extensions.group.split('x')[1],10)){return -1;}
+		if (parseInt(a.context.extensions.group.split('x')[1],10) > parseInt(b.context.extensions.group.split('x')[1],10)){return 1;}
+
+    });
+    responseObjs = {};
+    for (var i = 0; i < players[player].responses.length; i++) {
+    	if(!responseObjs[players[player].responses[i].context.extensions.group]){
+  			responseObjs[players[player].responses[i].context.extensions.group] = {};
+  		}
+  		responseObjs[players[player].responses[i].context.extensions.group].player = players[player].responses[i].actor.name;
+  		responseObjs[players[player].responses[i].context.extensions.group].question = players[player].responses[i].context.extensions.group;
+  		if(!responseObjs[players[player].responses[i].context.extensions.group].attempts){
+  			responseObjs[players[player].responses[i].context.extensions.group].attempts = [];
+  		}
+  		responseObjs[players[player].responses[i].context.extensions.group].attempts.push(players[player].responses[i]);
+  	}
+  	console.log(responseObjs);
+    //loop responses and write them out
+    var lastQuestion = '';
+    for (var i = 0; i < players[player].responses.length; i++) {
+    	
+    	//console.log(lastQuestion, players[player].responses[i].context.extensions.group);
+    	if(lastQuestion !== players[player].responses[i].context.extensions.group){
+    		//don't repeat - there are duplicates from the way I push the attempts (fix later?)
+	    	var out = '<div class="response-row"><span class="question">'+players[player].responses[i].context.extensions.group+'</span>';
+	    	var questionText = players[player].responses[i].context.extensions.group;
+	    	lastQuestion = players[player].responses[i].context.extensions.group;
+	    	//console.log(responseObjs[questionText]);
+	    	//for (var j = 0; j < responseObjs[questionText].attempts.length; j++) {
+	    		if(player === responseObjs[questionText].player){
+		    		if(responseObjs[questionText].question === players[player].responses[i].context.extensions.group){
+
+		    			//console.log('bout to sort - ', responseObjs[questionText].attempts);
+		    			responseObjs[questionText].attempts.sort(function(a,b){
+		    				//console.log('sorting');
+		    				//console.log(a.timestamp , b.timestamp);
+		    				if (moment(a.timestamp).toDate() > moment(b.timestamp).toDate()) { return 1; }
+		    				if (moment(a.timestamp).toDate() < moment(b.timestamp).toDate()) { return -1; }
+		    				//return 0;
+		    			});
+		    			
+		    			for (var k = 0; k < responseObjs[questionText].attempts.length; k++) {
+		    				out += '<span class="attempt" id="'+responseObjs[questionText].attempts[k].id+'">';
+		    				out += '<span class="success ';
+		    				if(responseObjs[questionText].attempts[k].result.success===true){
+		    					out += 'green">&#x2714;</span>';
+		    				}else{
+		    					out += 'red">&#x2716;</span>';
+		    				}
+		    				out += '<span class="latency ';
+
+		    				var latency;
+		    				if(responseObjs[questionText].attempts[k].result.duration === 'PT0H0M0S'){
+		    					latency = '1';
+		    				}else{
+		    					latency = responseObjs[questionText].attempts[k].result.duration.substr(2).replace('S','');
+		    				}
+
+		    				switch(latency){
+		    					case "1":
+		    						out += 'green';
+		    						break;
+		    					case "2":
+									out += 'green';
+		    						break;
+		    					case "3":
+									out += 'yellow';
+		    						break;
+		    					case "4":
+		    						out += 'orange';
+		    						break;
+		    					case "5":
+		    						out += 'red';
+		    						break;
+		    					default:
+			    					out += 'red';
+			    					break;
+		    				}
+		    				out += '" >'+latency+'s</span></span>';
+		    			};
+		    		}
+		    	}
+	    	//}
+	    	out += '</div>';
+	    	$('#responses').append(out);
+    	};
+    	
+    };
+    $('#actor-name').html(player);// + ' ['+players[player].responses[0].actor.mbox.replace('mailto:','')+']');
+    
+}
+
+$('.attempt').live('click',function(){
+	console.log($(this).attr('id'));
+	console.log(statements[$(this).attr('id')]);
+});
+
+function GUID ()
+{
+    var S4 = function ()
+    {
+        return Math.floor(
+                Math.random() * 0x10000 /* 65536 */
+            ).toString(16);
+    };
+    return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
+}
+
+});
+</script>
+</body>
+</html>

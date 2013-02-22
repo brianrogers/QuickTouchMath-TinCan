@@ -1,0 +1,156 @@
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>qtm-game</title>
+	<meta name = "viewport" content = "width = device-width">
+	<meta name="author" content="Brian Rogers">
+	<!-- Date: 2011-02-14 -->
+	<script src="scripts/jquery.js" type="text/javascript" charset="utf-8"></script>
+	<script src="mcquiz.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" href="style/qtm-game.css" type="text/css" media="screen" charset="utf-8">
+	<script>
+	//localStorage.setItem('qtm-player-name','Jack');
+	// localStorage.setItem('qtm-add-score','11');
+	// localStorage.setItem('qtm-sub-score','22');
+	// localStorage.setItem('qtm-mul-score','10');
+	// localStorage.setItem('qtm-div-score','12');
+
+	if(!localStorage["qtm-player-name"]){
+		window.location.assign('signin.html');
+	}
+
+	var qtm = new mcquiz();
+	
+	qtm.playerName = localStorage.getItem('qtm-player-name');
+	
+	if(!localStorage.getItem('qtm-add-score')){
+		localStorage.setItem('qtm-add-score','0');
+	}
+	qtm.addScore = localStorage.getItem('qtm-add-score');
+	
+	if(!localStorage.getItem('qtm-sub-score')){
+		localStorage.setItem('qtm-sub-score','0');
+	}
+	qtm.subScore = localStorage.getItem('qtm-sub-score');
+	
+	if(!localStorage.getItem('qtm-mul-score')){
+		localStorage.setItem('qtm-mul-score','0');
+	}
+	qtm.mulScore = localStorage.getItem('qtm-mul-score');
+
+	if(!localStorage.getItem('qtm-div-score')){
+		localStorage.setItem('qtm-div-score','0');
+	}
+	qtm.divScore = localStorage.getItem('qtm-div-score');
+
+	function showMenu() {
+		$('#gamemenu').show();
+		$('#gameover').hide();
+		$('#gameframe').hide();
+		$('#getready').hide();
+	}
+	
+	$(document).ready(function(){
+		$('#player').html(qtm.playerName);
+		$('#btnAdd').html(qtm.addScore);
+		$('#btnSub').html(qtm.subScore);
+		$('#btnMul').html(qtm.mulScore);
+		$('#btnDiv').html(qtm.divScore);
+
+		//startup jquery stuff
+		$('#button1').click(function(){qtm.submitAnswer($(this).text());});
+		$('#button2').click(function(){qtm.submitAnswer($(this).text());});
+		$('#button3').click(function(){qtm.submitAnswer($(this).text());});
+		$('#button4').click(function(){qtm.submitAnswer($(this).text());});
+		
+		$('#btnAdd').click(function(){qtm.resetGame('add');});
+		$('#btnSub').click(function(){qtm.resetGame('sub');});
+		$('#btnMul').click(function(){qtm.resetGame('mul');});
+		$('#btnDiv').click(function(){qtm.resetGame('div');});
+		
+		$('#getready').click(function(){qtm.startGame();});
+		
+		//$('#gameover').click(function(){window.document.location = window.document.location});
+		$('#gameoverbutton').click(function(){window.document.location = window.document.location;});
+		
+		$('#backbutton').click(function(){
+			window.document.location = "signin.html";
+		});
+		
+		$('#quitbutton').click(function(){
+			showMenu();
+		});
+		
+		showMenu();
+		
+	});
+	
+
+	
+	qtm.updateStartGameUI = function() {
+		$('#getready').hide();
+		$('#gameframe').show();
+	};
+	
+	qtm.updateTimerUI = function(counter) {
+		$('#timer').text(counter);
+	};
+	
+	qtm.updateQuestionUI = function(text,answers) {
+		$('#questionText').text(text);
+		$('#button1').text(answers[0]);
+		$('#button2').text(answers[1]);
+		$('#button3').text(answers[2]);
+		$('#button4').text(answers[3]);
+	};
+	
+	qtm.updateGameOverUI = function(message) {
+		$('#gameframe').hide();
+		$('#gameover').show();
+		$('#gameover-msg').html(message);
+	};
+	
+	qtm.updateScoreUI = function(score) {
+		$('#score').text(score);
+	};
+	
+	qtm.updateResetGameUI = function() {
+		$('#getready').show();
+		$('#gamemenu').hide();
+		$('#gameover').hide();
+		$('#gameframe').hide();
+	};
+	
+	window.scrollTo(0, 44);
+
+	</script>
+</head>
+<body>
+<div id="gamemenu">
+	<div id="backbutton">Back</div>
+	<div id="player"></div>
+	<div id="btnAdd"></div>
+	<div id="btnSub"></div>
+	<div id="btnMul"></div>
+	<div id="btnDiv"></div>
+</div>
+<div id="getready">
+	<div id="touchtostart">
+	</div>
+</div>
+<div id="gameframe">
+	<div id="quitbutton">Quit</div>
+	<div id="questionText"></div>
+	<div id="button1"></div>
+	<div id="button2"></div>
+	<div id="button3"></div>
+	<div id="button4"></div>
+	<div id="timer"></div>
+	<div id="score"></div>
+</div>
+<div id="gameover">
+	<div id="gameoverbutton">Try Again</div>
+	<div id="gameover-msg"></div>
+</div>
+</body>
+</html>
