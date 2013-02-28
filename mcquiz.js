@@ -15,9 +15,11 @@ var mcquiz = function() {
 	this.questionTimerInterval = null;
 	this.questionTimerRunning = false;
 
-	this.tc_lrs = {};
-	this.tc_lrs.endpoint = "https://cloud.scorm.com/ScormEngineInterface/TCAPI/VK76L7KZME/";
-	this.tc_lrs.auth = "Basic Vks3Nkw3S1pNRTo3WTFETmM1bWFwYk5wckg5aE1KQmNaNTFUbWFGSXNvY1hnUlFjREtn";
+	// this.tc_lrs = {};
+	// this.tc_lrs.endpoint = "https://cloud.scorm.com/ScormEngineInterface/TCAPI/VK76L7KZME/";
+	// this.tc_lrs.auth = "Basic Vks3Nkw3S1pNRTo3WTFETmM1bWFwYk5wckg5aE1KQmNaNTFUbWFGSXNvY1hnUlFjREtn";
+
+
 
 	this.parseXml = function(xml) {
 		var thisClass = this;
@@ -265,7 +267,7 @@ this.generateStatement = function(buttonClicked) {
 		var contextObj = {
 			"contextActivities":{
 				"grouping":{
-					"id": "quicktouchmath.com/game/"+this.gametype+"/",
+					"id": "http://quicktouchmath.com/game/"+this.gametype+"/",
 					"definition": {
 						"name": {
 							"en-US": "QuickTouchMath Online"
@@ -277,40 +279,40 @@ this.generateStatement = function(buttonClicked) {
 				}
 			},
 			"extensions":{
-				"game":this.gametype,
-				"group":this.currentQuestion[0]
+				"http://quicktouchmath.com/game":this.gametype,
+				"http://quicktouchmath.com/group":this.currentQuestion[0]
 			}
 		};
 
 		var interaction = {
-			"id": "quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0],
+			"id": "http://quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0],
 			"definition": {
 				"description": {
 					"en-US": this.currentQuestion[1]
 				},
-				"type": "http://www.adlnet.gov/experienceapi/activitytypes/cmi.interaction",
+				"type": "http://adlnet.gov/expapi/activities/cmi.interaction",
 				"interactionType": "choice",
 				"correctResponsesPattern": [this.currentQuestion[6]],
 				"choices": [{
-					"id": "quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0]+'/'+this.currentQuestion[2],
+					"id": "http://quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0]+'/'+this.currentQuestion[2],
 					"description": {
 						"en-US": this.currentQuestion[2]
 					}
 				},
 				{
-					"id": "quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0]+'/'+this.currentQuestion[3],
+					"id": "http://quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0]+'/'+this.currentQuestion[3],
 					"description": {
 						"en-US": this.currentQuestion[3]
 					}
 				},
 				{
-					"id": "quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0]+'/'+this.currentQuestion[4],
+					"id": "http://quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0]+'/'+this.currentQuestion[4],
 					"description": {
 						"en-US": this.currentQuestion[4]
 					}
 				},
 				{
-					"id": "quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0]+'/'+this.currentQuestion[5],
+					"id": "http://quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0]+'/'+this.currentQuestion[5],
 					"description": {
 						"en-US": this.currentQuestion[5]
 					}
@@ -322,7 +324,7 @@ this.generateStatement = function(buttonClicked) {
 
 		var stmt = {
 			"actor": {"name" : this.playerName,"mbox" :  "mailto:"+this.playerName+"@quicktouchmath.com" ,"objectType" : "Agent"},
-			"verb": {"display":{"en-US":"answered"},"id":"http://quicktouchmath.com/verbs/answered"},
+			"verb": {"display":{"en-US":"answered"},"id":"http://adlnet.gov/expapi/verbs/answered"},
 			"object": interaction,
 			"result": {
 				"success": wasCorrect,
@@ -334,7 +336,19 @@ this.generateStatement = function(buttonClicked) {
 		console.log(stmt);
 		
 
-		this.putStatement(stmt, function(data) {
+		tincan = new TinCan (
+                        {
+                            url: window.location
+                        }
+                    );
+                    tincan.addRecordStore(
+                        {
+					        endpoint: "https://cloud.scorm.com/ScormEngineInterface/TCAPI/VK76L7KZME/",
+					        auth:     "Basic Vks3Nkw3S1pNRTo3WTFETmM1bWFwYk5wckg5aE1KQmNaNTFUbWFGSXNvY1hnUlFjREtn"
+					    }
+                    );
+
+		tincan.sendStatement(stmt, function(data) {
 			console.log(data);
 		});
 	}
