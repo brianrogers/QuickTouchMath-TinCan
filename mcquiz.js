@@ -1,5 +1,29 @@
 /*jslint nomen: true, debug: true, evil: false, vars: true, white: true, browser: true, bitwise: true */
 /*global $, jQuery, alert, escape*/
+//like a uuid
+//http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
+function s4() {
+  return Math.floor((1 + Math.random()) * 0x10000)
+             .toString(16)
+             .substring(1);
+};
+
+function uuid() {
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+         s4() + '-' + s4() + s4() + s4();
+}
+var getSkillId = function (gametype) {
+  switch (gametype) {
+    case 'div':
+      return 'db071e53cfbb1b489bb752a49195494aa4c90938_id';
+    case 'mul':
+      return '4de11163a02bc9212b3dbb5db8f431c86773fa8b_id';
+    case 'add':
+      return 'ecb39d82d05f63e84558a2a93f59568d0d8b652d_id';
+    case 'sub':
+      return 'd05df9a709ca57544ca53ba0364821d587d1556f_id';
+  }
+};
 
 // copyright 2011 Brian Rogers - Creature Teachers
 var mcquiz = function() {
@@ -14,11 +38,14 @@ var mcquiz = function() {
 	this.questionTimer = 0;
 	this.questionTimerInterval = null;
 	this.questionTimerRunning = false;
+	this.sessionid = uuid();
 
 	// this.tc_lrs = {};
 	// this.tc_lrs.endpoint = "https://cloud.scorm.com/ScormEngineInterface/TCAPI/VK76L7KZME/";
 	// this.tc_lrs.auth = "Basic Vks3Nkw3S1pNRTo3WTFETmM1bWFwYk5wckg5aE1KQmNaNTFUbWFGSXNvY1hnUlFjREtn";
-
+	this.tc_lrs = {};
+	this.tc_lrs.endpoint = "https://cloud.scorm.com/ScormEngineInterface/TCAPI/EGOZ6RLIC0";
+	this.tc_lrs.auth = "Basic RUdPWjZSTElDMDp2VDVpc2dKSk9sbGZKODRNeEFOV3NYMFVYaVYxSFc1VXVia3RzeGtl";
 
 
 	this.parseXml = function(xml) {
@@ -165,6 +192,7 @@ var mcquiz = function() {
 
 		this.score = 0;
 		this.counter = this.quizTime;
+		this.sessionid = uuid();
 
 		this.updateResetGameUI();
 		this.updateScoreUI(this.score);
@@ -279,13 +307,22 @@ this.generateStatement = function(buttonClicked) {
 				}
 			},
 			"extensions":{
-				"http://quicktouchmath.com/game":this.gametype,
-				"http://quicktouchmath.com/group":this.currentQuestion[0]
+        // "http://quicktouchmath.com/game":this.gametype,
+        // "http://quicktouchmath.com/group":this.currentQuestion[0],
+				"http://quicktouchmath.com/game/quick-and-hacky/": {
+				  "skill": {
+            "id": getSkillId(this.gametype),
+            "name": this.gametype
+          },
+          "sessionid": this.sessionid,
+          "question": wasCorrect ? "correct" : "incorrect"
+				}
 			}
 		};
 
 		var interaction = {
-			"id": "http://quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0],
+      // "id": "http://quicktouchmath.com/game/"+this.gametype+"/"+this.currentQuestion[0],
+			"id": "http://quicktouchmath.com/game/",
 			"definition": {
 				"description": {
 					"en-US": this.currentQuestion[1]
@@ -343,8 +380,10 @@ this.generateStatement = function(buttonClicked) {
                     );
                     tincan.addRecordStore(
                         {
-					        endpoint: "https://cloud.scorm.com/ScormEngineInterface/TCAPI/VK76L7KZME/",
-					        auth:     "Basic Vks3Nkw3S1pNRTo3WTFETmM1bWFwYk5wckg5aE1KQmNaNTFUbWFGSXNvY1hnUlFjREtn"
+                  // endpoint: "https://cloud.scorm.com/ScormEngineInterface/TCAPI/VK76L7KZME/",
+                  // auth:     "Basic Vks3Nkw3S1pNRTo3WTFETmM1bWFwYk5wckg5aE1KQmNaNTFUbWFGSXNvY1hnUlFjREtn"                  
+                  endpoint: "https://cloud.scorm.com/ScormEngineInterface/TCAPI/EGOZ6RLIC0/",
+                  auth:     "Basic RUdPWjZSTElDMDp2VDVpc2dKSk9sbGZKODRNeEFOV3NYMFVYaVYxSFc1VXVia3RzeGtl"
 					    }
                     );
 
